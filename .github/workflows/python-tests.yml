@@ -32,11 +32,4 @@ jobs:  # Defines jobs to run
         else
           pytest -v -m regression  # ONLY regression on dev/staging
         fi
-    - name: Create Versioned Release
-      if: github.ref == 'refs/heads/prod'
-      uses: rymndhng/release-on-push-action@v4
-      with:
-        bump_version_scheme: minor
-        tag_prefix: v
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+   
