@@ -1,0 +1,42 @@
+name: Python Tests  # Name shown in Actions tab
+
+on:  # Triggers the workflow
+  push:
+    branches: [dev, staging, prod]  # Only runs on pushes to these branches
+
+jobs:  # Defines jobs to run
+  test:  # Job name
+    runs-on: ubuntu-latest  # Virtual machine (free, Linux)
+    strategy:
+      matrix:
+        python-version: ["3.12"]  # Python version to use
+
+    steps:  # Sequence of actions in the job
+    - name: Checkout code
+      uses: actions/checkout@v4  # Downloads your repo code
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5  # Installs Python
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |  # Bash commands (multi-line)
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Installs pytest, requests
+
+    - name: Run Tests
+      run: |  # Conditional tests based on branch
+        if [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
+          pytest -v -m "regression or non_regression"  # ALL tests on prod
+        else
+          pytest -v -m regression  # ONLY regression on dev/staging
+        fi
+    - name: Create Versioned Release
+      if: github.ref == 'refs/heads/prod'
+      uses: rymndhng/release-on-push-action@v4
+      with:
+        bump_version_scheme: minor
+        tag_prefix: v
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
